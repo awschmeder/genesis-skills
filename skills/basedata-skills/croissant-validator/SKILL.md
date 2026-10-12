@@ -1,7 +1,8 @@
 ---
 name: croissant-validator
 description: Validates and generates Croissant metadata for ML datasets. Use when checking dataset metadata compliance, creating new croissant.json files, validating existing metadata, or ensuring ML dataset descriptions follow the MLCommons Croissant format specification.
-allowed-tools: Read Bash Write Glob Grep
+compatibility: Paths use ${CLAUDE_SKILL_DIR} (Claude Code); elsewhere run from the skill root as scripts/...
+allowed-tools: Read Write Glob Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/validate_croissant.py *) Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/generate_croissant_from_csv.py *) Bash(python3 -m venv .venv_croissant) Bash(.venv_croissant/bin/pip install -q mlcroissant) Bash(.venv_croissant/bin/python ${CLAUDE_SKILL_DIR}/scripts/validate_croissant.py *) Bash(rm -rf .venv_croissant)
 ---
 
 # Croissant Metadata Validator & Generator
@@ -27,7 +28,7 @@ For any command requiring package installs, use a temporary venv in the working 
 
 ```bash
 python3 -m venv .venv_croissant && \
-.venv_croissant/bin/pip install -q mlcroissant pandas && \
+.venv_croissant/bin/pip install -q mlcroissant && \
 # ... run command(s) ... && \
 rm -rf .venv_croissant
 ```
@@ -39,13 +40,13 @@ Never run global `pip install`.
 1. Locate metadata file (`croissant.json`, `metadata.json`, or user-provided path).
 2. Run script-level validation:
    ```bash
-   python3 skills/croissant-validator/scripts/validate_croissant.py path/to/croissant.json
+   python3 ${CLAUDE_SKILL_DIR}/scripts/validate_croissant.py path/to/croissant.json
    ```
 3. If `mlcroissant` validation is required, run in venv:
    ```bash
    python3 -m venv .venv_croissant && \
    .venv_croissant/bin/pip install -q mlcroissant && \
-   .venv_croissant/bin/python skills/croissant-validator/scripts/validate_croissant.py path/to/croissant.json && \
+   .venv_croissant/bin/python ${CLAUDE_SKILL_DIR}/scripts/validate_croissant.py path/to/croissant.json && \
    rm -rf .venv_croissant
    ```
 4. Report: pass/fail, missing required fields, structural warnings, and fix suggestions.
@@ -60,7 +61,7 @@ Never run global `pip install`.
    - dataset URL
 2. Generate metadata from CSV:
    ```bash
-   python3 skills/croissant-validator/scripts/generate_croissant_from_csv.py \
+   python3 ${CLAUDE_SKILL_DIR}/scripts/generate_croissant_from_csv.py \
      data.csv \
      "My Dataset" \
      "Dataset description" \
