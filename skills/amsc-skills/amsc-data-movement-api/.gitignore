@@ -1,0 +1,4 @@
+# Live Globus tokens written at runtime
+scripts/tokens.json
+# Globus login URL written at runtime
+login.tmp
