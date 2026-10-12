@@ -26,11 +26,10 @@ git submodule update --init --recursive
 
 ## Build System
 
-GS2 uses a Make-based build controlled by the `GK_SYSTEM` environment variable.
+GS2 uses a Make-based build controlled by the `GK_SYSTEM` variable, set inline on the `make` command.
 
 ```bash
-export GK_SYSTEM=<system_name>
-make -I Makefiles
+GK_SYSTEM=<system_name> make -I Makefiles
 ```
 
 System-specific Makefiles live in `Makefiles/Makefile.$GK_SYSTEM`. The build picks up compiler paths, library locations, and flags from there.
@@ -52,7 +51,6 @@ Run `ls Makefiles/` to see all available systems.
 1. Copy a similar system's Makefile as a starting point:
    ```bash
    cp Makefiles/Makefile.generic_parallel Makefiles/Makefile.my_cluster
-   export GK_SYSTEM=my_cluster
    ```
 
 2. Edit `Makefiles/Makefile.my_cluster` to set:
@@ -60,11 +58,11 @@ Run `ls Makefiles/` to see all available systems.
    - `NETCDF_DIR`, `HDF5_DIR`, `FFTW_DIR`, `LAPACK_LIB`
    - Compiler flags (`FFLAGS`, `FPPFLAGS`)
 
-3. Build and watch for missing library errors, updating paths as needed.
+3. Build with `GK_SYSTEM=my_cluster make -I Makefiles` and watch for missing library errors, updating paths as needed.
 
 ## Build Flags
 
-Pass as `make` arguments alongside `GK_SYSTEM`:
+Pass as `make` arguments, with `GK_SYSTEM` set inline:
 
 | Flag | Effect |
 |------|--------|
@@ -76,7 +74,7 @@ Pass as `make` arguments alongside `GK_SYSTEM`:
 
 Example:
 ```bash
-make -I Makefiles DEBUG=on USE_HDF5=on
+GK_SYSTEM=<system_name> make -I Makefiles DEBUG=on USE_HDF5=on
 ```
 
 ## Verifying the Build

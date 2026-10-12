@@ -2,7 +2,7 @@
 name: gs2
 description: Gyrokinetics simulation code GS2. Use when installing GS2, writing or modifying GS2 input namelists, configuring species/grid/field/collision parameters, or launching GS2 runs on local machines or HPC clusters.
 compatibility: Requires Fortran compiler, MPI, NetCDF 4.2+, FFTW3, LAPACK. Linux/HPC environments.
-allowed-tools: Read Write Bash(make *) Bash(git *) Bash(mpirun *) WebFetch WebSearch
+allowed-tools: Read Write Bash(git clone --recurse-submodules https://bitbucket.org/gyrokinetics/gs2.git) Bash(git submodule update --init --recursive) Bash(make *) Bash(gs2 *) Bash(./gs2 *)
 ---
 
 # GS2 — Gyrokinetics Simulation Code
@@ -16,11 +16,8 @@ GS2 is an Eulerian gyrokinetic flux-tube code for studying low-frequency turbule
 git clone --recurse-submodules https://bitbucket.org/gyrokinetics/gs2.git
 cd gs2
 
-# Set the system name (see references/installation.md for supported systems)
-export GK_SYSTEM=your_system_name
-
-# Build
-make -I Makefiles
+# Build, setting the system name inline (see references/installation.md for supported systems)
+GK_SYSTEM=your_system_name make -I Makefiles
 ```
 
 If your HPC system is not in `Makefiles/`, create a new `Makefile.$GK_SYSTEM`. See [references/installation.md](references/installation.md) for dependencies, supported systems, and build flags.
@@ -86,8 +83,8 @@ gs2 --check-input   # validate namelists without running
 
 Common build flags:
 ```bash
-make -I Makefiles DEBUG=on       # debug build
-make -I Makefiles USE_MPI=on     # explicit MPI enable
+GK_SYSTEM=<system_name> make -I Makefiles DEBUG=on       # debug build
+GK_SYSTEM=<system_name> make -I Makefiles USE_MPI=on     # explicit MPI enable
 ```
 
 ## Additional Resources
