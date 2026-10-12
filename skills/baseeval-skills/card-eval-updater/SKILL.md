@@ -2,8 +2,8 @@
 name: card-eval-updater
 description: "Distill evaluation-harness output into the evaluation sections of a Genesis/BPSW model card. Parses lm-evaluation-harness (results_*.json), nemo-evaluator-launcher / Eval Factory (artifacts/results.yml), and NeMo-Skills (ns eval / ns robust_eval metrics.json) into a canonical eval bundle, then writes Evaluation data, Evaluation Procedure, Uncertainty Quantification, and Evaluation results into the card plus benchmark entries in the metrics: frontmatter. Use when the user asks to update or create a model card from an evaluation run, record benchmark results in a card, or report harness output as documentation."
 license: Apache-2.0
-compatibility: "Requires python3 with pyyaml. jsonschema optional (enables bundle validation). No network access needed."
-allowed-tools: Bash(python3 *) Read Glob Grep
+compatibility: "Requires python3 with pyyaml. jsonschema optional (enables bundle validation). No network access needed. Paths use ${CLAUDE_SKILL_DIR} (Claude Code); elsewhere run from the skill root as scripts/..."
+allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/parse_eval_results.py *) Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/update_card.py *) Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/validate_card_eval.py *) Read Glob Grep
 ---
 
 # Updating a model card from an evaluation run
@@ -56,7 +56,7 @@ special — they shell out to stock `lm_eval --output_path ... --log_samples`.
 ### 2. Parse to a bundle
 
 ```bash
-python3 scripts/parse_eval_results.py <run_dir> -o bundle.json
+python3 ${CLAUDE_SKILL_DIR}/scripts/parse_eval_results.py <run_dir> -o bundle.json
 ```
 
 The bundle conforms to `references/eval-bundle.schema.json` and is validated on
@@ -99,14 +99,14 @@ never target those (the tool warns if you try).
 If no card exists yet, start from the template:
 
 ```bash
-python3 scripts/update_card.py --template <modcon-bpsw>/cards/templates/model-card.md \
+python3 ${CLAUDE_SKILL_DIR}/scripts/update_card.py --template <modcon-bpsw>/cards/templates/model-card.md \
     bundle.json -o new-card.md
 ```
 
 ### 6. Preview
 
 ```bash
-python3 scripts/update_card.py card.md bundle.json -o card.out.md --dry-run
+python3 ${CLAUDE_SKILL_DIR}/scripts/update_card.py card.md bundle.json -o card.out.md --dry-run
 ```
 
 Read the diff. Confirm it only adds `### Automated benchmark results` blocks and
@@ -115,7 +115,7 @@ Read the diff. Confirm it only adds `### Automated benchmark results` blocks and
 ### 7. Write
 
 ```bash
-python3 scripts/update_card.py card.md bundle.json -o card.out.md
+python3 ${CLAUDE_SKILL_DIR}/scripts/update_card.py card.md bundle.json -o card.out.md
 ```
 
 Writes to a path you choose; never edits a repository checkout on its own.
@@ -123,7 +123,7 @@ Writes to a path you choose; never edits a repository checkout on its own.
 ### 8. Validate
 
 ```bash
-python3 scripts/validate_card_eval.py card.out.md bundle.json
+python3 ${CLAUDE_SKILL_DIR}/scripts/validate_card_eval.py card.out.md bundle.json
 ```
 
 This re-renders from the bundle and diffs against the card, so any number that
