@@ -33,7 +33,7 @@ You will be provided:
 
 ## Output Structure
 
-**DO** GENERATE PYTHON TO OUTPUT JSON
+**DO** WRITE THE JSON FILE WITH THE WRITE TOOL
 **DO NOT** OUTPUT MARKDOWN
 
 Return valid JSON with this EXACT structure:
@@ -93,12 +93,10 @@ Return valid JSON with this EXACT structure:
 ```
 
 ## JSON HANDLING - CRITICAL
-**When generating JSON, never ever output it directly. Always write python code that generates the json**
- - Never generate JSON directly, it's too difficult.
- - Always write the python code that generates the JSON.
- - Always use python code generator to generate JSON.
- - Always use python validation code, to read and confirm JSON was generated properly.
- - Take your time. Generate Python to output JSON. Generate Python to Validate JSON. 
+**When generating JSON, never output it directly into the conversation.**
+ - Write the JSON to its output file with the Write tool.
+ - Never write ad-hoc Python to generate or validate JSON; the orchestrator validates the file with the bundled script after you finish.
+ - Take your time and make sure the file is complete, valid JSON.
 
 ## Critical Requirements
 

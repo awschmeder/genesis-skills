@@ -3,7 +3,8 @@ name: battleprint
 description: Perform red and blue team adversarial analysis on AI systems. Use after ai-fingerprint to identify attack vectors and defense strategies for LLM/RAG/Agentic systems.
 # disable-model-invocation: true
 # user-invocable: true
-allowed-tools: Bash(python *) Bash(cat *) Bash(cd *) Bash(python3 *) Read Write Agent
+compatibility: "Paths use ${CLAUDE_SKILL_DIR} (Claude Code); elsewhere run from the skill root as scripts/..."
+allowed-tools: Read Write Agent Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/load_json_test.py *) Bash(mkdir -p *)
 # requires: ai-fingerprint
 ---
 
@@ -13,7 +14,7 @@ You are executing the **Battleprint** skill. This performs a red and blue team a
 
 ## Architecture Overview
 
-This skill is a **prompt-first architecture** where YOU (Claude Code) handle all reasoning and analysis, while Python utilities provide fast data operations (file scanning, use of ai-fingerprint skill and its results).
+This skill is a **prompt-first architecture** where YOU (Claude Code) handle all reasoning and analysis, while a bundled Python script validates the JSON files and the ai-fingerprint skill supplies the system analysis.
 
 ## Your Task
 
@@ -41,38 +42,32 @@ Examples:
 ## Execution Steps
 
 ### EXECUTION GUIDE - APPLIES TO ALL PHASES AND STEPS
-**When executing bash or unix (e.g. ls, wc, cd, etc.) commands, never ever string them together into a single command.**
+**When executing bash or unix (e.g. ls, wc, etc.) commands, never ever string them together into a single command.**
  - Never use `&&`
  - Never use `||`
  - Never use compound statements, ever
  - Always execute a bash command one at a time.
  - Always execute a unix command one-at-a-time, never compound them.
 
-**When generating JSON, never ever output it directly. Always write python code that generates the json**
- - Never generate JSON directly, it's too difficult.
- - Always write the python code that generates the JSON.
- - Always use python code generator to generate JSON.
- - Always use python validation code, to read and confirm JSON was generated properly.
- - Take your time. Generate Python to output JSON. Generate Python to Validate JSON. 
+**When generating JSON, never output it directly into the conversation.**
+ - Write the JSON to its file with the Write tool.
+ - Then validate it with `python3 ${CLAUDE_SKILL_DIR}/scripts/load_json_test.py <file>`.
+ - Never write ad-hoc Python to generate or validate JSON.
 
 ### Phase 0: Setup and Check for AI-FingerPrint
 
 **Parse and set paths:**
-```bash
-# Get absolute path of target
-TARGET_DIR=$(cd "$target_dir" && pwd)
-TARGET_BASE=$(dirname "$TARGET_DIR")
-TARGET_NAME=$(basename "$TARGET_DIR")
 
-# Fingerprint results location (alongside target)
-FINGERPRINT_DIR="${TARGET_BASE}/ai_fingerprint_results/${TARGET_NAME}"
+Resolve these absolute paths yourself (no shell needed):
+- `TARGET_DIR`: the absolute path of the target directory
+- `TARGET_BASE`: the parent directory of `TARGET_DIR`
+- `TARGET_NAME`: the final path component of `TARGET_DIR`
+- `FINGERPRINT_DIR`: `<TARGET_BASE>/ai_fingerprint_results/<TARGET_NAME>`
+- `OUTPUT_DIR`: `<TARGET_BASE>/battleprint_results/<TARGET_NAME>`
 
-# Battleprint output location (alongside target)
-OUTPUT_DIR="${TARGET_BASE}/battleprint_results/${TARGET_NAME}"
-mkdir -p "$OUTPUT_DIR"
-```
+Then create the output directory with a single command: `mkdir -p <absolute OUTPUT_DIR>`.
 
-All subsequent references to paths use these variables.
+All subsequent references to these names mean the absolute paths; substitute them literally in commands.
 
 **Verify fingerprint exists:**
 1. Check if `$FINGERPRINT_DIR/system_analysis.json` exists
@@ -88,14 +83,10 @@ All subsequent references to paths use these variables.
 **Process:**
 
 1. **Read the file scan results:**
-```bash
-cat "$FINGERPRINT_DIR/file_scan.json"
-```
+Use the Read tool on "$FINGERPRINT_DIR/file_scan.json".
 
 2. **Read the system analysis results:**
-```bash
-cat "$FINGERPRINT_DIR/system_analysis.json"
-```
+Use the Read tool on "$FINGERPRINT_DIR/system_analysis.json".
 
 3. **Parallel Execute 2 Agents**
    
@@ -110,13 +101,13 @@ cat "$FINGERPRINT_DIR/system_analysis.json"
 
 4. **Verify Stage 1 Complete**
 
-Use Python's built-in JSON parser to check validity:
+Validate each file with the bundled script:
 ```bash
-python3 -c "import json; json.load(open('$OUTPUT_DIR/red_stage_1.json'))" && echo "✓ Valid JSON" || echo "✗ Invalid JSON"
+python3 ${CLAUDE_SKILL_DIR}/scripts/load_json_test.py <OUTPUT_DIR>/red_stage_1.json
 ```
 and 
 ```bash
-python3 -c "import json; json.load(open('$OUTPUT_DIR/blue_stage_1.json'))" && echo "✓ Valid JSON" || echo "✗ Invalid JSON"
+python3 ${CLAUDE_SKILL_DIR}/scripts/load_json_test.py <OUTPUT_DIR>/blue_stage_1.json
 ```
 ### Phase 2: Stage 2 Red and Blue
 
@@ -126,19 +117,13 @@ python3 -c "import json; json.load(open('$OUTPUT_DIR/blue_stage_1.json'))" && ec
 
 **Red Team Agent (Stage 2)**
 1. **Read the file scan results:**
-```bash
-cat "$FINGERPRINT_DIR/file_scan.json"
-```
+Use the Read tool on "$FINGERPRINT_DIR/file_scan.json".
 
 2. **Read the system analysis results:**
-```bash
-cat "$FINGERPRINT_DIR/system_analysis.json"
-```
+Use the Read tool on "$FINGERPRINT_DIR/system_analysis.json".
 
 3. **Read blue team's plans:**
-```bash
-cat "$OUTPUT_DIR/blue_stage_1.json"
-```
+Use the Read tool on "$OUTPUT_DIR/blue_stage_1.json".
 
 4. **Execute Red Team Stage 2**
    
@@ -148,24 +133,18 @@ cat "$OUTPUT_DIR/blue_stage_1.json"
 
 5. **Verify Stage 2 Complete**
 ```bash
-python3 -c "import json; json.load(open('$OUTPUT_DIR/red_stage_2.json'))" && echo "✓ Valid JSON" || echo "✗ Invalid JSON"
+python3 ${CLAUDE_SKILL_DIR}/scripts/load_json_test.py <OUTPUT_DIR>/red_stage_2.json
 ```
 
 **Blue Team Agent (Stage 2)**
 1. **Read the file scan results:**
-```bash
-cat "$FINGERPRINT_DIR/file_scan.json"
-```
+Use the Read tool on "$FINGERPRINT_DIR/file_scan.json".
 
 2. **Read the system analysis results:**
-```bash
-cat "$FINGERPRINT_DIR/system_analysis.json"
-```
+Use the Read tool on "$FINGERPRINT_DIR/system_analysis.json".
 
 3. **Read red team's plans:**
-```bash
-cat "$OUTPUT_DIR/red_stage_1.json"
-```
+Use the Read tool on "$OUTPUT_DIR/red_stage_1.json".
 
 4. **Execute Blue Team Stage 2**
    
@@ -175,7 +154,7 @@ cat "$OUTPUT_DIR/red_stage_1.json"
 
 5. **Verify Stage 2 Complete**
 ```bash
-python3 -c "import json; json.load(open('$OUTPUT_DIR/blue_stage_2.json'))" && echo "✓ Valid JSON" || echo "✗ Invalid JSON"
+python3 ${CLAUDE_SKILL_DIR}/scripts/load_json_test.py <OUTPUT_DIR>/blue_stage_2.json
 ```
 
 ### Phase 3: Synthesis
