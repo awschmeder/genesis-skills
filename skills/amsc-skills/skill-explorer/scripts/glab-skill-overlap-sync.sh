@@ -77,10 +77,39 @@ scan_local_root() {
 sync_dir_from_remote() {
   local src="$1"
   local dest="$2"
+  local resolved
 
+  # Refuse to delete anything unless dest is a real (non-symlink) skill directory
+  # that is neither / nor $HOME, so a malformed root cannot widen the rm below.
+  if [[ -z "$src" || -z "$dest" || ! -d "$src" ]]; then
+    echo "sync_dir_from_remote: missing source or destination" >&2
+    return 1
+  fi
+  # A trailing "/" or "/." would make [[ -L ]] follow the link, so strip them first.
+  while [[ "$dest" == */ || "$dest" == */. ]]; do
+    if [[ "$dest" == "/" ]]; then break; fi
+    if [[ "$dest" == */. ]]; then dest="${dest%/.}"; else dest="${dest%/}"; fi
+    if [[ -z "$dest" ]]; then dest="/"; break; fi
+  done
+  if [[ -L "$dest" || ! -d "$dest" ]]; then
+    echo "sync_dir_from_remote: destination is not a plain directory: $dest" >&2
+    return 1
+  fi
+  resolved="$(CDPATH= cd -P -- "$dest" && pwd -P)" || return 1
+  if [[ "$resolved" == "/" || "$resolved" == "$(CDPATH= cd -P -- "$HOME" && pwd -P)" ]]; then
+    echo "sync_dir_from_remote: refusing to replace $resolved" >&2
+    return 1
+  fi
+  if [[ ! -f "$resolved/SKILL.md" ]]; then
+    echo "sync_dir_from_remote: no SKILL.md in $resolved" >&2
+    return 1
+  fi
+
+  # set -e is inactive in a function called from `if`, so failures are returned
+  # explicitly: 1 = refused before any change, 2 = failed after deletion began.
   # Replace destination contents while preserving destination directory.
-  find "$dest" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-  cp -a "$src"/. "$dest"/
+  find "$resolved" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} + || return 2
+  cp -a "$src"/. "$resolved"/ || return 2
 }
 
 group=""
@@ -247,12 +276,22 @@ if [[ "$check_remote" == "true" ]]; then
         fi
 
         if [[ "$run_update" == "yes" ]]; then
-          sync_dir_from_remote "$remote_skill_dir" "$local_path"
-          action="updated"
-          if diff -qr --exclude .git "$local_path" "$remote_skill_dir" >/dev/null 2>&1; then
-            status="up_to_date"
+          # A guard refusal is reported per skill instead of aborting the run under set -e.
+          if sync_dir_from_remote "$remote_skill_dir" "$local_path"; then
+            action="updated"
+            if diff -qr --exclude .git "$local_path" "$remote_skill_dir" >/dev/null 2>&1; then
+              status="up_to_date"
+            else
+              status="update_attempted_but_still_different"
+            fi
           else
-            status="update_attempted_but_still_different"
+            sync_rc=$?
+            if [[ "$sync_rc" -eq 2 ]]; then
+              action="update_failed"
+            else
+              action="update_refused"
+            fi
+            status="different"
           fi
         else
           action="skipped_update"
