@@ -1,3 +1,14 @@
+# /// script
+# requires-python = ">=3.10,<3.13"
+# dependencies = [
+#   "pandas==2.2.3",
+#   "pydantic==2.10.6",
+#   "numpy==1.26.4",
+#   "uncertainty-toolbox==0.1.1",
+#   "matplotlib==3.9.4",
+#   "seaborn==0.13.2",
+# ]
+# ///
 from pathlib import Path
 import argparse
 import sys

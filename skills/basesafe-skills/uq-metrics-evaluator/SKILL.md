@@ -1,9 +1,10 @@
 ---
 name: uq-metrics-evaluator
 description: 'Use when the user asks for model evaluation, accuracy, calibration, or uncertainty quantification (UQ) analysis from CSV data. Handles both regression (MAE, RMSE, R², calibration) and classification (accuracy, F1, ROC-AUC, ECE, confusion matrix). Discovers the right CSV files and columns from prompt intent, then runs evaluation with artifact outputs.'
+compatibility: Script paths use ${CLAUDE_SKILL_DIR} (Claude Code). On other clients, run the commands from the skill root with paths relative to it, e.g. scripts/csv_reader_tool.py. Requires uv.
 # user-invocable: true
 # disable-model-invocation: false
-allowed-tools: Bash(uv *) Read Glob Grep
+allowed-tools: Read Glob Bash(uv run ${CLAUDE_SKILL_DIR}/scripts/csv_reader_tool.py *) Bash(uv run ${CLAUDE_SKILL_DIR}/scripts/evaluate_metrics_tool.py *) Bash(uv run ${CLAUDE_SKILL_DIR}/scripts/evaluate_classification_tool.py *)
 ---
 
 # Model Accuracy and Calibration Analysis
@@ -39,18 +40,16 @@ Core behavior:
 
 ## Environment Bootstrap
 
-Use ephemeral `uv run --with` execution to avoid creating dependency files in the repository.
+Each script declares pinned dependencies in a PEP 723 header, so `uv run` resolves them in an ephemeral environment without creating dependency files in the repository.
 
 Schema inspection (both task types):
 ```bash
-uv run --with pandas --with pydantic \
-    scripts/csv_reader_tool.py <file.csv>
+uv run ${CLAUDE_SKILL_DIR}/scripts/csv_reader_tool.py <file.csv>
 ```
 
 Regression evaluation:
 ```bash
-uv run --with pandas --with pydantic --with numpy --with uncertainty-toolbox --with matplotlib --with seaborn \
-    scripts/evaluate_metrics_tool.py <predictions.csv> <ground_truth.csv> \
+uv run ${CLAUDE_SKILL_DIR}/scripts/evaluate_metrics_tool.py <predictions.csv> <ground_truth.csv> \
     --pred-col <prediction_column> \
     --truth-col <truth_column> \
     [--uncertainty-col <uncertainty_column>]
@@ -58,8 +57,7 @@ uv run --with pandas --with pydantic --with numpy --with uncertainty-toolbox --w
 
 Classification evaluation:
 ```bash
-uv run --with pandas --with pydantic --with numpy --with scikit-learn --with matplotlib --with seaborn \
-    scripts/evaluate_classification_tool.py <predictions.csv> <ground_truth.csv> \
+uv run ${CLAUDE_SKILL_DIR}/scripts/evaluate_classification_tool.py <predictions.csv> <ground_truth.csv> \
     --pred-col <predicted_class_column> \
     --truth-col <true_label_column> \
     [--prob-col <positive_class_prob_column>]        # binary only
@@ -68,8 +66,7 @@ uv run --with pandas --with pydantic --with numpy --with scikit-learn --with mat
 
 Validation loop for execution:
 1. Run the command.
-2. If dependency or import errors appear, add missing packages via `--with` and rerun.
-3. Repeat until the command succeeds.
+2. If dependency or import errors appear, do not add `--with` or other packages; tell the user what is missing and ask how to proceed.
 
 ## Task Type Routing
 

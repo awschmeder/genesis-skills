@@ -1,3 +1,10 @@
+# /// script
+# requires-python = ">=3.10,<3.13"
+# dependencies = [
+#   "pandas==2.2.3",
+#   "pydantic==2.10.6",
+# ]
+# ///
 import argparse
 import sys
 from pathlib import Path

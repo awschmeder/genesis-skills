@@ -1,3 +1,14 @@
+# /// script
+# requires-python = ">=3.10,<3.13"
+# dependencies = [
+#   "pandas==2.2.3",
+#   "pydantic==2.10.6",
+#   "numpy==1.26.4",
+#   "scikit-learn==1.5.2",
+#   "matplotlib==3.9.4",
+#   "seaborn==0.13.2",
+# ]
+# ///
 """Classification metrics evaluation tool.
 
 Evaluates standard classification metrics (accuracy, F1, ROC-AUC, etc.) and,
@@ -6,8 +17,8 @@ when predicted probabilities are available, probabilistic calibration metrics
 
 Usage
 -----
-uv run --with pandas --with pydantic --with numpy --with scikit-learn --with matplotlib --with seaborn \\
-    ./scripts/evaluate_classification_tool.py <predictions.csv> <ground_truth.csv> \\
+uv run ${CLAUDE_SKILL_DIR}/scripts/evaluate_classification_tool.py \\
+    <predictions.csv> <ground_truth.csv> \\
     --pred-col <predicted_class_column> \\
     --truth-col <true_label_column> \\
     [--prob-col <predicted_probability_column>]   # for binary; omit for hard-label-only
