@@ -56,7 +56,7 @@ Build steps:
 ```bash
 ./machines/mkdeps.<machine>.sh      # build/install dependencies
 ./machines/configure.<machine>.sh   # configure CMake
-make install -j $(nproc)
+make install -j 4
 ```
 
 Binaries land in `$HOME/gkylsoft/gkeyll/bin/`.
@@ -109,7 +109,7 @@ For GPU builds, add:
 ### Step 3 — Compile
 
 ```bash
-make -j $(nproc)
+make -j 4
 make install
 ```
 
@@ -118,17 +118,17 @@ make install
 Gkeyll has five interdependent solver layers. Build only what you need:
 
 ```bash
-make vlasov -j $(nproc)       # Vlasov-Maxwell solver
-make gyrokinetic -j $(nproc)  # Gyrokinetic solver
-make moments -j $(nproc)      # Fluid moments solver
-make pkpm -j $(nproc)         # 10-moment PKPM
-make core -j $(nproc)         # Core utilities only
+make vlasov -j 4       # Vlasov-Maxwell solver
+make gyrokinetic -j 4  # Gyrokinetic solver
+make moments -j 4      # Fluid moments solver
+make pkpm -j 4         # 10-moment PKPM
+make core -j 4         # Core utilities only
 ```
 
 ## Running Tests
 
 ```bash
-make check -j $(nproc)        # unit tests
+make check -j 4        # unit tests
 # or build a specific test
 make build/core/unit/ctest_array
 ./build/core/unit/ctest_array
@@ -137,7 +137,7 @@ make build/core/unit/ctest_array
 Regression test (example):
 ```bash
 cd Regression/vm-weibel/
-mpirun -n 1 $HOME/gkylsoft/gkeyll/bin/gkeyll rt-weibel-2x2v-p2.lua
+mpirun -np 1 $HOME/gkylsoft/gkeyll/bin/gkeyll rt-weibel-2x2v-p2.lua
 ```
 
 ## Common Issues

@@ -121,7 +121,7 @@ grid = data.getGrid()     # list of coordinate arrays
 Run a standard test to verify the installation:
 ```bash
 cd $HOME/gkeyll/Regression/vm-weibel/
-mpirun -n 1 $HOME/gkylsoft/gkeyll/bin/gkeyll rt-weibel-2x2v-p2.lua
+mpirun -np 1 $HOME/gkylsoft/gkeyll/bin/gkeyll rt-weibel-2x2v-p2.lua
 ```
 
 Compare output to reference using postgkyl:

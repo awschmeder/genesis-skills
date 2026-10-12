@@ -2,7 +2,7 @@
 name: gkeyll
 description: Gkeyll plasma simulation framework. Use when installing gkeyll, writing Lua input files for VlasovMaxwell, Gyrokinetic, or Moments apps, configuring species and field parameters, or launching gkeyll runs on local machines or HPC clusters.
 compatibility: "Requires CMake, OpenBLAS (with gfortran), SuperLU, LuaJIT. Optional: MPI, CUDA, NCCL. Linux/macOS."
-allowed-tools: Read Write Bash(make *) Bash(git *) Bash(cmake *) Bash(mpirun *) WebFetch WebSearch
+allowed-tools: Read Write Bash(git clone https://github.com/ammarhakim/gkeyll.git) Bash(make *) Bash(./configure *) Bash(./machines/mkdeps.*.sh) Bash(./machines/configure.*.sh) Bash(./mkdeps.sh *) Bash($HOME/gkylsoft/gkeyll/bin/gkeyll *) Bash(gkeyll *) Bash(pgkyl *)
 ---
 
 # Gkeyll — Plasma Simulation Framework
@@ -19,7 +19,7 @@ cd gkeyll
 # Build dependencies then configure
 ./machines/mkdeps.<machine>.sh      # e.g., macos, traverse, perlmutter
 ./machines/configure.<machine>.sh
-make install -j $(nproc)
+make install -j 4                 # fixed -j; a $(nproc) substitution would prompt. Adjust to your core count
 ```
 
 **Custom/new systems**:
@@ -28,7 +28,7 @@ cd install-deps
 ./mkdeps.sh --build-openblas=yes --build-superlu=yes
 cd ..
 ./configure --help                  # review options for compiler paths
-make -j $(nproc)
+make -j 4
 ```
 
 See [references/installation.md](references/installation.md) for full dependency list, machine script names, GPU/CUDA options, and per-layer build targets.
