@@ -5,7 +5,7 @@ This file is the source of truth for the confirmed movement API routes currently
 ## Service configuration
 
 - Base URL: `https://api.american-science-cloud.org/api/current`
-- Auth: Globus `UserApp` bearer token
+- Auth: myAmSC Ping PAT as `Authorization: Bearer $AMSC_TOKEN` (bundled client's Globus `UserApp` login below is unverified legacy)
 - Resource server: `35bf38d3-4b30-42c8-ac9f-e39cec6516bf`
 - Scope: `https://auth.globus.org/scopes/35bf38d3-4b30-42c8-ac9f-e39cec6516bf/amsc`
 

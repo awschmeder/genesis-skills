@@ -15,18 +15,18 @@ This skill is currently focused on the **movement transfer** surface. The confir
 
 ## What the agent should do
 
-1. Use `scripts/amsc_service_client.py` as the default client.
+1. Use curl with the PAT (`examples/curl-examples.md`) as the default. `scripts/amsc_service_client.py` is the legacy Globus-login client; use it only if the PAT path does not fit.
 2. Treat `references/endpoints.md` as the source of truth for confirmed routes.
 3. Use `references/examples.md` for the known-good tutorial collection IDs and transfer payloads.
 4. Use `examples/curl-examples.md` when you need raw HTTP requests instead of the Python client.
-5. If the client prompts for interactive Globus login, copy the login URL into `login.tmp` so the user can complete auth and return the authorization code.
+5. AmSC API auth is Ping Identity: a PAT from the Personal Access Tokens page of the myAmSC dashboard (https://my.amsc.energy.gov/dashboard); a PAT is tied to the project selected when it is generated, passed as `Authorization: Bearer $AMSC_TOKEN` (see `examples/curl-examples.md`). The bundled client still implements a Globus login for the AmSC scope below; this is not verified as current, so use curl with the PAT if it fails. If the client prompts for interactive Globus login, copy the login URL into `login.tmp` so the user can complete auth and return the authorization code.
 
 ## Current configuration
 
 ```text
 Base URL: https://api.american-science-cloud.org/api/current
-Resource server: 35bf38d3-4b30-42c8-ac9f-e39cec6516bf
-Primary scope: https://auth.globus.org/scopes/35bf38d3-4b30-42c8-ac9f-e39cec6516bf/amsc
+Resource server (legacy Globus login): 35bf38d3-4b30-42c8-ac9f-e39cec6516bf
+Primary scope (legacy Globus login): https://auth.globus.org/scopes/35bf38d3-4b30-42c8-ac9f-e39cec6516bf/amsc
 Client script: .claude/skills/amsc-data-movement-api/scripts/amsc_service_client.py
 Token cache: .claude/skills/amsc-data-movement-api/scripts/tokens.json (written next to the client script — live credentials, never commit)
 ```

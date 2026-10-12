@@ -6,8 +6,9 @@ Use these examples when you want raw HTTP requests instead of the Python client.
 
 ```bash
 export AMSC_API_BASE="https://api.american-science-cloud.org/api/current"
-export AMSC_GLOBUS_BEARER_TOKEN="<INSERT_GLOBUS_BEARER_TOKEN>"
-AUTH_HEADER="Authorization: Bearer ${AMSC_GLOBUS_BEARER_TOKEN}"
+# PAT from the Personal Access Tokens page of the myAmSC dashboard
+export AMSC_TOKEN="<INSERT_AMSC_PAT>"
+AUTH_HEADER="Authorization: Bearer ${AMSC_TOKEN}"
 JSON_HEADER="Accept: application/json"
 ```
 
@@ -75,5 +76,5 @@ curl -sS \
 
 ## Notes
 
-- The Python client is preferred because it manages the interactive Globus login flow.
+- Authenticate with a myAmSC Ping Identity PAT (`AMSC_TOKEN`). The bundled Python client's Globus login flow is unverified against Ping auth; use these curl requests if it fails.
 - The direct Globus creation route can temporarily return `409` if a matching transfer is still active.

@@ -1,5 +1,9 @@
 # Authentication
 
+AmSC API authentication is Ping Identity: get a personal access token (PAT) from the Personal Access Tokens page of the myAmSC dashboard (https://my.amsc.energy.gov/dashboard); a PAT is tied to the project selected when it is generated. Export it as `AMSC_TOKEN` and send it as `Authorization: Bearer $AMSC_TOKEN` (see `../examples/curl-examples.md`).
+
+The Globus resource server, scope, `UserApp` client and login flow below describe the bundled client's legacy AmSC login and are unverified against Ping auth; prefer the PAT. The Globus `data_access` consent for transfer source collections was observed with the legacy Globus login and has not been verified with a PAT.
+
 ## Base URL and scope
 
 ```text
@@ -8,9 +12,9 @@ Resource server: 35bf38d3-4b30-42c8-ac9f-e39cec6516bf
 Primary scope: https://auth.globus.org/scopes/35bf38d3-4b30-42c8-ac9f-e39cec6516bf/amsc
 ```
 
-## Default client
+## Legacy client
 
-Use the Python client in this skill:
+The Python client in this skill uses the legacy Globus login (unverified against Ping auth; prefer the PAT):
 
 ```bash
 python3 .claude/skills/amsc-data-movement-api/scripts/amsc_service_client.py --transfers

@@ -1,5 +1,7 @@
 # Authentication Guide
 
+AmSC API auth is Ping Identity. Get a personal access token (PAT) from the Personal Access Tokens page of the myAmSC dashboard (https://my.amsc.energy.gov/dashboard); a PAT is tied to the project selected when it is generated. Store it in `AMSC_TOKEN` and use `Client(token=...)` or the `token` auth method. Facility auth (ALCF, NERSC) remains Globus. The Globus sections that target the AmSC gateway below (`ensure amsc`, "Globus OAuth2") are legacy: unverified, prefer the PAT.
+
 ## Scripted Auth (Recommended for Claude)
 
 Use `scripts/token_manager.py` for all auth lifecycle management.
@@ -18,7 +20,7 @@ python3 .claude/skills/amsc-python-client/scripts/token_manager.py ensure alcf
 python3 .claude/skills/amsc-python-client/scripts/token_manager.py ensure nersc
 
 # AmSC gateway (catalog, workflows)
-python3 .claude/skills/amsc-python-client/scripts/token_manager.py ensure amsc
+python3 .claude/skills/amsc-python-client/scripts/token_manager.py ensure amsc  # legacy, unverified; prefer AMSC_TOKEN
 
 # With validation against API
 python3 .claude/skills/amsc-python-client/scripts/token_manager.py ensure nersc --validate
@@ -53,7 +55,7 @@ Tell the user to run it interactively:
 ```python
 client = Client(token="your-api-token")
 ```
-Static bearer token. No refresh. Best for CI/CD or service accounts.
+Static bearer token (myAmSC Ping PAT, e.g. from `AMSC_TOKEN`). No refresh. Default for the AmSC API. A PAT is short-lived; on a 401 generate a new one.
 
 ### Globus OAuth2 (Interactive)
 
@@ -73,6 +75,8 @@ client = Client(
 - Auto-refresh via refresh tokens (60s buffer before expiry)
 
 ### Ping Identity Device Flow (Headless)
+
+The AmSC Ping issuer and client ID are not covered here; for the AmSC API use the PAT above.
 
 ```python
 client = Client(
@@ -109,8 +113,7 @@ Each facility has its own authenticator. Authenticating to ALCF does NOT authent
 
 ```yaml
 base_url: https://api.american-science-cloud.org/api/current
-auth_method: globus
-globus_client_id: "e4f48665-38b5-4833-a89e-849c71f5b3e3"
+auth_method: token   # token from AMSC_TOKEN (myAmSC PAT)
 ```
 
 ## Environment Variables
@@ -118,7 +121,7 @@ globus_client_id: "e4f48665-38b5-4833-a89e-849c71f5b3e3"
 | Variable | Purpose |
 |----------|---------|
 | `AMSC_BASE_URL` | API base URL |
-| `AMSC_TOKEN` | Static token |
+| `AMSC_TOKEN` | myAmSC PAT (Personal Access Tokens page) |
 | `AMSC_AUTH_METHOD` | `token`, `globus`, or `ping` |
 | `AMSC_GLOBUS_CLIENT_ID` | Globus native app ID |
 

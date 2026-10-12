@@ -26,15 +26,16 @@ python3 .claude/skills/amsc-python-client/scripts/token_manager.py ensure alcf
 # For NERSC (Perlmutter):
 python3 .claude/skills/amsc-python-client/scripts/token_manager.py ensure nersc
 
-# For AmSC gateway (catalog, workflows, MLflow):
-python3 .claude/skills/amsc-python-client/scripts/token_manager.py ensure amsc
+# For AmSC gateway (catalog, workflows, MLflow): skip `ensure amsc`; export a PAT:
+export AMSC_TOKEN="<INSERT_AMSC_PAT>"
 ```
 
-If the user needs to login, `ensure` prints a Globus URL + prompts for auth code.
-Tell the user: **"Open this URL in your browser, login, and paste the code back here."**
+For `alcf` and `nersc`, `ensure` prints a Globus URL + prompts for auth code (facility auth stays Globus).
+For the AmSC API, authentication is Ping Identity: use a PAT from the Personal Access Tokens page of the myAmSC dashboard (https://my.amsc.energy.gov/dashboard). A PAT is tied to the project selected when it is generated. Export it as `AMSC_TOKEN`. The Globus gateway login in `token_manager.py` is unverified; prefer the PAT. `token_manager.py status` reports `amsc_gateway` only from the Globus cache and ignores `AMSC_TOKEN`.
+For `alcf` and `nersc` only, tell the user: **"Open this URL in your browser, login, and paste the code back here."**
 Use `! python3 .claude/skills/amsc-python-client/scripts/token_manager.py ensure <target>` so the interactive login runs in-session.
 
-3. If auth is broken (persistent 401s), clear and re-login:
+3. For the AmSC API a PAT is short-lived; on a 401 generate a new one. For ALCF or NERSC, if auth is broken (persistent 401s), clear and re-login:
 ```bash
 python3 .claude/skills/amsc-python-client/scripts/token_manager.py clear alcf
 python3 .claude/skills/amsc-python-client/scripts/token_manager.py ensure alcf --force-login
@@ -59,6 +60,7 @@ After auth pre-flight, all operations work without further prompts:
 from amsc_client import Client
 
 client = Client(token="not-needed-for-facilities")
+# An explicit token overrides AMSC_TOKEN; use a separate client for catalog/workflow/mlflow calls.
 
 # ALCF — built-in, works out of the box
 alcf = client.facility("alcf")
@@ -97,6 +99,16 @@ client.register_facility(
 ```
 
 For AmSC gateway (catalog, workflows, MLflow):
+```python
+import os
+
+client = Client(
+    base_url="https://api.american-science-cloud.org/api/current",
+    token=os.environ["AMSC_TOKEN"],
+)
+```
+
+Legacy Globus login (unverified):
 ```python
 app_id = "e4f48665-38b5-4833-a89e-849c71f5b3e3"
 client = Client(
@@ -203,9 +215,9 @@ Use absolute paths. Never use `$HOME`, `$SCRATCH`, `$USER` — IRI API does not 
 
 | Method | When to Use | Config |
 |--------|------------|--------|
-| **Globus** | Interactive, notebooks | `Client(auth_method="globus", ...)` |
-| **Token** | CI/CD, service-to-service | `Client(token="...")` |
-| **Ping** | Headless/server | `Client(auth_method="ping", ...)` |
+| **Token** | AmSC API default: myAmSC Ping PAT (`AMSC_TOKEN`) | `Client(token="...")` |
+| **Ping** | Device flow (RFC 8628); AmSC issuer/client ID not documented (unverified) | `Client(auth_method="ping", ...)` |
+| **Globus** | Facility (ALCF/NERSC) auth; legacy for the AmSC API (unverified) | `Client(auth_method="globus", ...)` |
 
 See `references/authentication-guide.md` for full config.
 
