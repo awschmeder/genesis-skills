@@ -1,7 +1,8 @@
 ---
 name: datacard-generator
 description: "Generate Genesis Mission Datacard v1.2 documentation for scientific datasets by introspecting a directory and filling the structured template. Use when the user asks to create a datacard, dataset card, dataset documentation, dataset metadata, document a dataset, or prepare a dataset for sharing. Supports six capability dimensions (discoverability, accessibility, interoperability, reusability, governed_use, ai_usability) — pick which ones apply via `supports_*` flags. Also converts MODCON v1 datacards to Genesis v1.2."
-allowed-tools: Bash(*) Read WebSearch WebFetch
+compatibility: Paths use ${CLAUDE_SKILL_DIR} (Claude Code); elsewhere run from the skill root as scripts/...
+allowed-tools: Read Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/introspect.py *) Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/convert_v1_to_genesis.py *) Bash(uv run --with linkml linkml-validate *) WebFetch(domain:api.datacite.org) WebFetch(domain:pub.orcid.org) WebFetch(domain:api.ror.org) WebFetch(domain:www.osti.gov)
 ---
 
 # Generating Datacards
@@ -25,7 +26,7 @@ Copy this checklist and check off steps as you go.
 ```
 Progress:
 - [ ] 1. Gather context (dataset_path now; `supports_*` capabilities after step 2, with evidence)
-- [ ] 2. Run python3 scripts/introspect.py on the dataset directory
+- [ ] 2. Run python3 ${CLAUDE_SKILL_DIR}/scripts/introspect.py on the dataset directory
 - [ ] 3. Load capability-specific guidance
 - [ ] 4. Auto-fill YAML from introspect output
 - [ ] 5. Confirm dataset readiness level with the user (optional)
@@ -59,7 +60,7 @@ Each `supports_X = Yes` triggers a required `X` block in the YAML and a correspo
 
 ### 2. Introspect the directory
 
-Run `python3 scripts/introspect.py <dataset_path>` and capture the JSON. See
+Run `python3 ${CLAUDE_SKILL_DIR}/scripts/introspect.py <dataset_path>` and capture the JSON. See
 [references/introspection-commands.md](references/introspection-commands.md) for
 what each output field means.
 
@@ -93,10 +94,8 @@ For deep field-by-field explanation, load the relevant section of
 / ~35K tokens of commented guidance, none of which belongs in a finished
 card. Never read it whole. Read only the section you need:
 
-```bash
-# Absolute path from the skill root; works from any cwd.
-sed -n 'START,ENDp' <skill_root>/references/genesis_v1.0_template.md
-```
+Use the Read tool on `${CLAUDE_SKILL_DIR}/references/genesis_v1.0_template.md`
+with `offset` (START line) and `limit` (END - START + 1).
 
 Write the card directly, in template key order, with only the blocks the
 `supports_*` flags turn on. Step 9 proves nothing required is missing.
@@ -228,14 +227,17 @@ should remain. Verify with:
 
 ### 9. Validate
 
-`linkml-validate` takes YAML, so split the frontmatter off first (uv
-fetches linkml on demand):
+`linkml-validate` takes YAML, so extract the frontmatter (the lines between
+the first two `---` delimiters) of the written card to `./card.yaml` in the
+working directory. The awk and rm steps may prompt. uv fetches linkml on
+demand:
 
 ```bash
-awk 'NR>1 && /^---$/{exit} NR>1' <written_file> > /tmp/card.yaml
+awk 'NR>1 && /^---$/{exit} NR>1' <written_file> > ./card.yaml
 uv run --with linkml linkml-validate \
-  -s <skill_root>/scripts/genesis_datacard.yaml \
-  -C GenesisDatacardClass /tmp/card.yaml
+  -s ${CLAUDE_SKILL_DIR}/scripts/genesis_datacard.yaml \
+  -C GenesisDatacardClass ./card.yaml
+rm -f ./card.yaml
 ```
 
 Prints `No issues found`, or one `[ERROR]` per problem naming the JSON
@@ -270,7 +272,7 @@ Ask if the user wants to revise any section before finishing.
 
 When the user asks to convert an existing MODCON v1 datacard:
 
-1. Run `python3 scripts/convert_v1_to_genesis.py <v1_path> --json` and capture the JSON report. The report has three lists:
+1. Run `python3 ${CLAUDE_SKILL_DIR}/scripts/convert_v1_to_genesis.py <v1_path> --json` and capture the JSON report. The report has three lists:
    - `mapped` — fields the converter populated.
    - `missing_required` — Genesis fields the converter couldn't map. **Iterate over this list and prompt the user.**
    - `orphans` — v1 fields with no v2 equivalent.

@@ -104,6 +104,8 @@ resolve each distinct DOI once per session and reuse the response.
 
 ### Live Lookup
 
+For DataCite DOIs only, a header-free alternative works with `WebFetch`: `GET https://api.datacite.org/dois/{doi}` returns the same fields under `data.attributes`; `publisher` is a plain string unless `?publisher=true` is added. Other registrars' DOIs, and the `doi.org` forms below, need an `Accept` header, so they fall back to `curl` and will prompt. ORCID and OSTI also need one; ROR works via `WebFetch`.
+
 Ask for DataCite JSON first; it is the richest shape for datasets:
 
 ```
@@ -174,7 +176,7 @@ files are copy-pasted too.
 | `creators[].givenName` / `.familyName` | `…authors[].person.given_name` / `.family_name` | |
 | `creators[].nameIdentifiers[]` where `schemeUri` is ORCID | `…authors[].person.orcid` | **store the full URL form** `https://orcid.org/XXXX-XXXX-XXXX-XXXX` — the model regex rejects the bare ID |
 | `creators[].affiliation[].name` | `…authors[].person.affiliation.name` | `name` is required inside an `affiliation` block; feed the string to the ROR lookup to get `ror_id` |
-| `publisher.name` | `discoverability.dataset_publisher.name` | required once `release_status` is `Approved` or `Published` |
+| `publisher` (string; `publisher.name` with `?publisher=true`) | `discoverability.dataset_publisher.name` | required once `release_status` is `Approved` or `Published` |
 | `fundingReferences[].funderName` | `discoverability.sponsor_organizations[].name` | |
 | `fundingReferences[].awardNumber` | `discoverability.sponsor_organizations[].award_number` | **often removes the need for an OSTI call** |
 | `identifiers[]` where `identifierType: "OSTI ID"` | (not a card field) | the canonical OSTI record id — use it for the OSTI lookup instead of `?doi=` |

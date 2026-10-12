@@ -11,7 +11,7 @@ touch, and (3) advanced patterns the agent should run manually.
 ## 1. `introspect.py` — bulk inspection (use this first)
 
 ```bash
-python3 scripts/introspect.py <dataset_dir>
+python3 ${CLAUDE_SKILL_DIR}/scripts/introspect.py <dataset_dir>
 ```
 
 Emits JSON to stdout. Stdlib-only; cross-platform (Windows, macOS, Linux).
