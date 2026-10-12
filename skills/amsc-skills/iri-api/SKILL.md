@@ -33,6 +33,10 @@ python3 scripts/iri_api_call.py call --facility nersc --operation-id getProjects
 
 `--base-url` and `--openapi-url` follow the same rule: they are global flags and must also come before the subcommand.
 
+## Confirm Before Changing Anything
+
+Ask the user to confirm the exact operation and parameters before calling any POST, PUT, or DELETE operation except `getJobs` (a read-only status query that uses POST). This includes `launchJob`, `updateJob`, `cancelJob`, `deleteTask`, `upload`, and the filesystem `mkdir`, `symlink`, `cp`, `mv`, `rm`, `chmod`, `chown`, `compress`, and `extract`. Read-only operations need no confirmation.
+
 ## Quick Start
 
 1. Check token state:
@@ -92,13 +96,8 @@ python3 scripts/token_manager.py ensure --facilities nersc --validate-iri --vali
 python3 scripts/token_manager.py ensure --facilities alcf --validate-iri --validate-facility alcf
 ```
 
-- Print selected facility access tokens:
-```bash
-python3 scripts/token_manager.py ensure --print-token
-python3 scripts/token_manager.py ensure --facilities alcf --print-token
-```
-
 Notes:
+- Never print access tokens (`--print-token`) or pass one on the command line (`--bearer-token`): the output and command line land in the conversation transcript and logs. `iri_api_call.py --ensure-token` handles tokens internally.
 - Default token file: `~/.globus/auth_tokens.json`
 - The saved file preserves the full Globus token response, including `other_tokens`.
 - The usable IRI API bearer token is extracted from `other_tokens`, not the top-level Globus Auth token.

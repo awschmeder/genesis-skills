@@ -544,7 +544,7 @@ def cmd_ensure(args: argparse.Namespace) -> int:
         else:
             print(
                 "Selected facility access tokens not printed "
-                "(use --print-token to display them)."
+                "(use iri_api_call.py --ensure-token to make API calls)."
             )
 
     return 0

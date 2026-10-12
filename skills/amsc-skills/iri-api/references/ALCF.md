@@ -18,10 +18,9 @@ python3 scripts/token_manager.py \
   --facilities alcf \
   --validate-iri \
   --validate-facility alcf
-
-# Print the current ALCF access token if you explicitly need it:
-python3 scripts/token_manager.py ensure --facilities alcf --print-token
 ```
+
+Do not print the access token; it would be exposed in the conversation transcript and logs.
 
 Default token file: `~/.globus/auth_tokens.json`
 
