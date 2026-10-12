@@ -2,7 +2,7 @@
 name: skill-search
 description: Load or search a centrally managed skills catalog plus optional user-provided skills. Use when an agent needs either the full list of available skills up front or an iterative search tool for multi-turn discovery without loading the whole catalog into context.
 compatibility: Designed to live next to a sibling skills directory on a filesystem-based agent runtime. Also supports an explicit central root or the SKILL_SEARCH_CENTRAL_ROOT environment variable for alternate deployments.
-allowed-tools: Bash
+allowed-tools: Read Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/skill_search.py *)
 ---
 # Skill Search
 
@@ -13,6 +13,7 @@ Use this helper when an agent needs one of two discovery strategies:
 
 ## Configuration
 
+- Command paths use `${CLAUDE_SKILL_DIR}` (Claude Code). On other clients, run the commands from the skill root and use `scripts/skill_search.py`.
 - `my_skills_path`: optional user-managed skills root. Repeat if more than one user root is needed.
 
 The helper resolves the central catalog in this order: the `--central-root` flag, then the `SKILL_SEARCH_CENTRAL_ROOT` environment variable, then a sibling `../skills` directory. To make this skill expose the Genesis catalog, symlink `skill-search/` into your agent's skills dir and (if it isn't beside `skills/`) point one of those at the catalog. The alternative — flattening every skill into a client skills directory for direct discovery — is handled by the repo's `unpack.sh` (`./unpack.sh --help`).
@@ -22,13 +23,13 @@ The helper resolves the central catalog in this order: the `--central-root` flag
 Use when the agent should search on demand rather than hold the full catalog in context:
 
 ```bash
-python scripts/skill_search.py --query "draft a Slurm batch script for a four-GPU job"
+python3 ${CLAUDE_SKILL_DIR}/scripts/skill_search.py --query "draft a Slurm batch script for a four-GPU job"
 ```
 
 With a user-provided skills path and a custom result limit:
 
 ```bash
-python scripts/skill_search.py \
+python3 ${CLAUDE_SKILL_DIR}/scripts/skill_search.py \
   --query "validate Croissant metadata for an ML dataset" \
   --top-k 3 \
   --my-skills-path /path/to/my/skills
@@ -41,21 +42,16 @@ Scoring weights name token matches (×2) over description token matches (×1), w
 Use when the agent should receive the full menu upfront and pick without needing a query. The compact index (names + descriptions + paths, no bodies) is loaded first; the full SKILL.md body is loaded on demand for the selected skill.
 
 ```bash
-python scripts/skill_search.py --load-all
+python3 ${CLAUDE_SKILL_DIR}/scripts/skill_search.py --load-all
 ```
 
 With a user-provided skills path:
 
 ```bash
-python scripts/skill_search.py --load-all --my-skills-path /path/to/my/skills
+python3 ${CLAUDE_SKILL_DIR}/scripts/skill_search.py --load-all --my-skills-path /path/to/my/skills
 ```
 
-After loading the index, load a selected skill's body via the Python API:
-
-```python
-from skill_search import load_skill_body
-body = load_skill_body(selected_skill)
-```
+After loading the index, Read the `skill_md_path` field of the selected skill to load its full SKILL.md body.
 
 Pass `--include-prompt` to also receive a pre-formatted `<available_skills>` XML block suitable for injection into an agent system prompt.
 
