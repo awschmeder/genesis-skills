@@ -3,7 +3,8 @@ name: ai-fingerprint
 description: Generate comprehensive AI system fingerprint with architecture analysis and Strand generation. Use when analyzing AI/LLM systems for security assessment or system profiling.
 # disable-model-invocation: true
 # user-invocable: true
-allowed-tools: Bash(python *) Bash(python3 *) Bash(cd *) Bash(cat *) Read Write
+compatibility: "Paths use ${CLAUDE_SKILL_DIR} (Claude Code); elsewhere run from the skill root as scripts/..."
+allowed-tools: Read Write Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/ai_fingerprint.py scan *) Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/ai_fingerprint.py embed *) Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/ai_fingerprint.py cheatsheet) Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/load_json_test.py *) Bash(mkdir -p *)
 ---
 
 # AI Fingerprint - System Analysis and Strand Generation
@@ -34,19 +35,17 @@ Examples:
 ## Execution Steps
 
 ### EXECUTION GUIDE - APPLIES TO ALL PHASES AND STEPS
-**When executing bash or unix (e.g. ls, wc, cd, etc.) commands, never ever string them together into a single command.**
+**When executing bash or unix (e.g. ls, wc, etc.) commands, never ever string them together into a single command.**
  - Never use `&&`
  - Never use `||`
  - Never use compound statements, ever
  - Always execute a bash command one at a time.
  - Always execute a unix command one-at-a-time, never compound them.
 
-**When generating JSON, never ever output it directly. Always write python code that generates the json**
- - Never generate JSON directly, it's too difficult.
- - Always write the python code that generates the JSON.
- - Always use python code generator to generate JSON.
- - Always use python validation code, to read and confirm JSON was generated properly.
- - Take your time. Generate Python to output JSON. Generate Python to Validate JSON. 
+**When generating JSON, write it to disk with the Write tool, then validate it.**
+ - Write the JSON file with the Write tool.
+ - Validate it with `load_json_test.py` to confirm it parses.
+ - Take your time. Fix and re-validate until it passes.
 
 ### Phase 0: Argument Parsing & Setup
 
@@ -58,22 +57,19 @@ Examples:
 **Validate and set paths:**
 1. Target directory exists and is readable
 2. Derive output directory location (results will be created alongside the target directory):
-```bash
-# Get absolute path of target
-TARGET_DIR=$(cd "$target_dir" && pwd)
-TARGET_BASE=$(dirname "$TARGET_DIR")
-TARGET_NAME=$(basename "$TARGET_DIR")
+Resolve absolute paths yourself (no shell substitution), then create the directory with a single command:
+- `TARGET_DIR`: absolute path of the target
+- `OUTPUT_DIR`: `<parent of TARGET_DIR>/ai_fingerprint_results/<target name>`, e.g. `/bob/ai_fingerprint_results/fish`
 
-# Output alongside target: e.g., /bob/ai_fingerprint_results/fish/
-OUTPUT_DIR="${TARGET_BASE}/ai_fingerprint_results/${TARGET_NAME}"
-mkdir -p "$OUTPUT_DIR"
+```bash
+mkdir -p <absolute OUTPUT_DIR>
 ```
 
-All subsequent references to `<output_dir>` refer to `$OUTPUT_DIR`.
+In the rest of this document `<OUTPUT_DIR>` and `<TARGET_DIR>` stand for those absolute paths; substitute them literally in commands.
 
 **Scan codebase:**
 ```bash
-python3 scripts/ai_fingerprint.py scan "$TARGET_DIR" --output "$OUTPUT_DIR/file_scan.json"
+python3 ${CLAUDE_SKILL_DIR}/scripts/ai_fingerprint.py scan <TARGET_DIR> --output <OUTPUT_DIR>/file_scan.json
 ```
 
 This gives you a quick inventory of AI-related files without reading everything.
@@ -87,9 +83,7 @@ This gives you a quick inventory of AI-related files without reading everything.
 **Process:**
 
 1. **Read the file scan results:**
-```bash
-cat "$OUTPUT_DIR/file_scan.json"
-```
+Use the Read tool on <OUTPUT_DIR>/file_scan.json.
 
 2. **Identify key files** to examine:
    - AI/LLM integration files (look for: openai, anthropic, langchain, etc.)
@@ -117,16 +111,16 @@ Follow its instructions to analyze what you've learned about the codebase.
 
 Save your analysis as JSON to:
 ```
-$OUTPUT_DIR/system_analysis.json
+<OUTPUT_DIR>/system_analysis.json
 ```
 
 Use the JSON structure specified in the prompt. **CRITICAL**: Output ONLY valid JSON with no markdown code blocks or explanatory text.
 
 **Validate the JSON:**
 
-Use Python's built-in JSON parser to check validity:
+Validate the file with the bundled script:
 ```bash
-python3 -c "import json; json.load(open('$OUTPUT_DIR/system_analysis.json'))" && echo "✓ Valid JSON" || echo "✗ Invalid JSON - fix and retry"
+python3 ${CLAUDE_SKILL_DIR}/scripts/load_json_test.py <OUTPUT_DIR>/system_analysis.json
 ```
 
 If validation fails, fix the JSON and retry.
@@ -141,7 +135,7 @@ If validation fails, fix the JSON and retry.
 
 1. **Generate and embed strand in one step:**
 ```bash
-python3 scripts/ai_fingerprint.py embed "$OUTPUT_DIR/system_analysis.json"
+python3 ${CLAUDE_SKILL_DIR}/scripts/ai_fingerprint.py embed <OUTPUT_DIR>/system_analysis.json
 ```
 
 This will:
@@ -160,7 +154,7 @@ Example result:
 
 2. **Display strand cheatsheet for user reference:**
 ```bash
-python3 scripts/ai_fingerprint.py cheatsheet
+python3 ${CLAUDE_SKILL_DIR}/scripts/ai_fingerprint.py cheatsheet
 ```
 
 ---
@@ -204,10 +198,10 @@ RAG Component (7 chars): <rag_part>
   • <insight 3>
 
 📁 Output Files:
-  • System Analysis: $OUTPUT_DIR/system_analysis.json
-  • File Scan: $OUTPUT_DIR/file_scan.json
-  • CWE Context: $OUTPUT_DIR/cwe_context.txt
-  • Strand Output: $OUTPUT_DIR/strand_output.txt
+  • System Analysis: <OUTPUT_DIR>/system_analysis.json
+  • File Scan: <OUTPUT_DIR>/file_scan.json
+  • CWE Context: <OUTPUT_DIR>/cwe_context.txt
+  • Strand Output: <OUTPUT_DIR>/strand_output.txt
   
 📍 Output Location: Results are saved alongside the target directory at:
   <parent_of_target>/ai_fingerprint_results/<target_name>/
@@ -253,7 +247,7 @@ The battleprint skill can detect if a fingerprint already exists and reuse it, o
 - Continue with manual inventory
 
 **If JSON validation fails:**
-- Use the json_validator to extract and fix the JSON
+- load_json_test.py only reports VALID or INVALID; re-read the file to locate the error, then fix the JSON
 - Ensure no markdown code blocks (````json) in output
 - Ensure proper JSON syntax (quotes, commas, brackets)
 
@@ -283,7 +277,7 @@ The battleprint skill can detect if a fingerprint already exists and reuse it, o
 **JSON Quality**: 
 - The system_analysis.json is critical for downstream tools
 - Must be valid JSON with proper structure
-- Use the json_validator to ensure correctness
+- Use load_json_test.py to ensure correctness
 
 **Strand Interpretation**:
 - The strand is a compact fingerprint, not a full analysis
