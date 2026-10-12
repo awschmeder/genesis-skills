@@ -42,7 +42,12 @@ python3 .claude/skills/amsc-python-client/scripts/token_manager.py ensure alcf -
 
 ## Installation
 
-Supports `uv` (preferred), `pip+venv`, or bare `pip`. Pass optional venv path:
+Supports `uv` (preferred) or `python3 -m venv` + `pip`; always installs into a venv, never system
+Python (requires Python >= 3.11; an existing older venv is rejected). amsc-client 0.5.0 and
+amsc-api-autogen 0.5.5 are installed from direct GitLab wheel URLs pinned by sha256, because the
+GitLab registries forward unknown names to PyPI. amsc-client >= 0.6 is not used until a
+verified install source is documented. An existing venv at the path is reused. Pass optional venv
+path:
 
 ```bash
 .claude/skills/amsc-python-client/scripts/install.sh       # default: .venv
